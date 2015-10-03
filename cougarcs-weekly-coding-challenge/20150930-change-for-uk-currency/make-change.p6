@@ -1,10 +1,11 @@
 #!/usr/bin/env perl6
 
-# we do not want negative pence
-subset UKPence of Int where * >= 0;
 
 
-module CurrencyUK {
+module Currency::UK {
+	# we do not want negative pence
+	our subset UKPence of Int where * >= 0;
+
 	our grammar Grammar {
 		token TOP { <currency-pence> | <currency-pound> };
 		token currency-pence { <value=.integer> <pence-sign> };
@@ -23,7 +24,7 @@ module CurrencyUK {
 	);
 
 	our sub str-to-pence( Str $currency ) {
-		my $currency-ast = CurrencyUK::Grammar.parse($currency);
+		my $currency-ast = Currency::UK::Grammar.parse($currency);
 		die "Could not parse currency string $currency" unless $currency-ast;
 		my $currency-in-pence;
 		if $currency-ast<currency-pence>:exists {
@@ -33,19 +34,21 @@ module CurrencyUK {
 		}
 	}
 
+	our sub make-change( UKPence $amount ) {
+
+	}
+
 	our sub coinage() { return %coinage-to-pence }
 }
 
 
 sub MAIN( Str $currency  ) {
-	my $currency-in-pence = CurrencyUK::str-to-pence( $currency );
+	my $currency-in-pence = Currency::UK::str-to-pence( $currency );
 	say $currency-in-pence;
 
-	say CurrencyUK::coinage;
+	say Currency::UK::coinage;
 	#make-change(  );
 }
 
-#sub make-change( UKPence $amount ) {
-#}
 
 
