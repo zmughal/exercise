@@ -1,10 +1,6 @@
 #!/usr/bin/env perl6
 
-
-
 module Currency::UK {
-	# we do not want negative pence
-	our subset UKPence of Int where * >= 0;
 
 	our grammar Grammar {
 		token TOP { <currency-pence> | <currency-pound> };
@@ -34,8 +30,24 @@ module Currency::UK {
 		}
 	}
 
-	our sub make-change( UKPence $amount ) {
+	our sub make-change( Int $amount where $amount >= 0 ) {
+		say %coinage-to-pence.sort( { .value } ).reverse>>.key;
+		return make-change-helper( $amount, %coinage-to-pence.sort( { .value } ).reverse.Array );
+	}
 
+	our sub make-change-helper( Int $amount, @denominations ) {
+		return 1 if $amount == 0; # if the $amount is reached
+		return 0 if $amount < 0 or not @denominations; # if the $amount is invalid or no more coins left
+		my ($denom, *@denom-rest) = @denominations;
+
+		return make-change-helper($amount - $denom.value, @denominations ) + make-change-helper( $amount, @denom-rest );
+
+		#my @list = ();
+		#for ^($amount div $denom.value) -> $n {
+			#@list.push:  { $denom.key => $n } X, make-change-helper( $amount - $n * $denom.value, @denom-rest );
+			#say @list;
+		#}
+		#return @list;
 	}
 
 	our sub coinage() { return %coinage-to-pence }
@@ -46,8 +58,14 @@ sub MAIN( Str $currency  ) {
 	my $currency-in-pence = Currency::UK::str-to-pence( $currency );
 	say $currency-in-pence;
 
-	say Currency::UK::coinage;
-	#make-change(  );
+	my %us-coinage-to-cents = (
+		"penny" => 1,
+		"nickel" => 5,
+		"dime" => 10,
+		"quarter" => 25,
+	);
+	say Currency::UK::make-change-helper( 100, %us-coinage-to-cents.sort({ .value }).reverse.Array );
+	#say Currency::UK::make-change( $currency-in-pence  );
 }
 
 
