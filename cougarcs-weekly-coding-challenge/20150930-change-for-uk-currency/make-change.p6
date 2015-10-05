@@ -1,5 +1,9 @@
 #!/usr/bin/env perl6
 
+use Term::ProgressBar;               # panda install Term::ProgressBar
+use Inline::Perl5;                   # panda install Inline::Perl5
+use Lingua::EN::Inflect:from<Perl5>; # cpanm Lingua::EN::Inflect # Perl5 module
+
 module Currency::UK {
 
 	our grammar Grammar {
@@ -8,8 +12,10 @@ module Currency::UK {
 		token currency-pound { <pound-sign> <value=.number> };
 		token pence-sign { p };
 		token pound-sign { \£ };
-		token integer { \d+ };
-		token decimal { <.integer>? \. \d\{2\} };
+		token nonzero-digit { <[ 1 .. 9 ]> };
+		token digit { <[ 0 .. 9 ]> };
+		token integer { <nonzero-digit> <digit>+ | <digit> };
+		token decimal { <.integer>? \. \d \d };
 		token number { <.integer> | <.decimal> };
 	}
 	our $pound-to-pence = 100;
@@ -24,48 +30,81 @@ module Currency::UK {
 		die "Could not parse currency string $currency" unless $currency-ast;
 		my $currency-in-pence;
 		if $currency-ast<currency-pence>:exists {
-			$currency-in-pence = ~$currency-ast<currency-pence><value>
+			$currency-in-pence = $currency-ast<currency-pence><value>.Int;
 		} elsif $currency-ast<currency-pound>:exists {
-			$currency-in-pence = $pound-to-pence * ~$currency-ast<currency-pound><value>
+			$currency-in-pence = $pound-to-pence * ~$currency-ast<currency-pound><value>.Rat;
 		}
 	}
 
-	our sub make-change( Int $amount where $amount >= 0 ) {
-		say %coinage-to-pence.sort( { .value } ).reverse>>.key;
-		return make-change-helper( $amount, %coinage-to-pence.sort( { .value } ).reverse.Array );
+	our sub make-change-count( Int $amount where $amount >= 0  ) {
+		# count the ways to make change
+		sub make-change-helper-count( Int $amount, @denominations ) is cached {
+			return 1 if $amount == 0; # if the $amount is reached
+			return 0 if $amount < 0 or not @denominations; # if the $amount is invalid or no more coins left
+
+			# head and tail of @denominations array
+			my ($current-denomination, *@denominations-rest) = @denominations;
+			return make-change-helper-count($amount - $current-denomination.value, @denominations )
+				+ make-change-helper-count( $amount, @denominations-rest );
+		}
+
+		return make-change-helper-count( $amount, %coinage-to-pence.sort( { .value } ).reverse.Array );
 	}
 
-	our sub make-change-helper( Int $amount, @denominations ) {
-		return 1 if $amount == 0; # if the $amount is reached
-		return 0 if $amount < 0 or not @denominations; # if the $amount is invalid or no more coins left
-		my ($denom, *@denom-rest) = @denominations;
+	our sub make-change-list( Int $amount where $amount >= 0 ) {
+		# array to store the list of change combinations
+		my @coin-list;
 
-		return make-change-helper($amount - $denom.value, @denominations ) + make-change-helper( $amount, @denom-rest );
+		my $bar = Term::ProgressBar.new( count => make-change-count( $amount ), :t, :p );
+		say "Calculating a list of ways to make change:";
+		# nested function that will modify @coin-list
+		sub make-change-helper-list( Int $amount, @denominations, %coins-used = {} ) {
+			if $amount == 0 {
+				# if the $amount is reached
+				#say %coins-used.perl;#DEBUG
+				$bar.update(@coin-list.elems);
+				push @coin-list, %coins-used;
+				return;
+			}
+			if $amount < 0 or not @denominations {
+				# if the $amount is invalid or no more coins left
+				return;
+			}
 
-		#my @list = ();
-		#for ^($amount div $denom.value) -> $n {
-			#@list.push:  { $denom.key => $n } X, make-change-helper( $amount - $n * $denom.value, @denom-rest );
-			#say @list;
-		#}
-		#return @list;
+			# head and tail of @denominations array
+			my ($current-denomination, *@denominations-rest) = @denominations;
+
+			# use up the current denomination
+			my %coins-used-next = %coins-used;
+			%coins-used-next{$current-denomination.key}++;
+			make-change-helper-list($amount - $current-denomination.value, @denominations, %coins-used-next  );
+
+			# do not use the current denomination
+			make-change-helper-list( $amount, @denominations-rest, %coins-used );
+
+			return
+		}
+
+		make-change-helper-list( $amount, %coinage-to-pence.sort( { .value } ).reverse.Array );
+
+		say "\n"; # end of $bar
+
+		return @coin-list;
 	}
+
 
 	our sub coinage() { return %coinage-to-pence }
 }
 
-
 sub MAIN( Str $currency  ) {
 	my $currency-in-pence = Currency::UK::str-to-pence( $currency );
-	say $currency-in-pence;
 
-	my %us-coinage-to-cents = (
-		"penny" => 1,
-		"nickel" => 5,
-		"dime" => 10,
-		"quarter" => 25,
-	);
-	say Currency::UK::make-change-helper( 100, %us-coinage-to-cents.sort({ .value }).reverse.Array );
-	#say Currency::UK::make-change( $currency-in-pence  );
+	my $ways-to-make-change = Currency::UK::make-change-count( $currency-in-pence  );
+	say "There { Lingua::EN::Inflect::PL_V("is", $ways-to-make-change) } { $ways-to-make-change } { Lingua::EN::Inflect::PL_N("way", $ways-to-make-change) }"
+		~ " to make change for $currency using"
+		~ " the { Lingua::EN::Inflect::PL_N("coin", Currency::UK::coinage.elems) } { Lingua::EN::Inflect::WORDLIST(Currency::UK::coinage.sort({.value})>>.keys) }.";
+	my @coin-list = Currency::UK::make-change-list( $currency-in-pence  );
+	say @coin-list.perl;
 }
 
 
