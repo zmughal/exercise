@@ -100,7 +100,7 @@ sub MAIN( Str $currency  ) {
 	my $currency-in-pence = Currency::UK::str-to-pence( $currency );
 
 	my $ways-to-make-change = Currency::UK::make-change-count( $currency-in-pence  );
-	say "There { Lingua::EN::Inflect::PL_V("is", $ways-to-make-change) } { $ways-to-make-change } { Lingua::EN::Inflect::PL_N("way", $ways-to-make-change) }"
+	say "There { Lingua::EN::Inflect::PL_V("is", $ways-to-make-change) } { Lingua::EN::Inflect::NO("way", $ways-to-make-change ) }"
 		~ " to make change for $currency using"
 		~ " the { Lingua::EN::Inflect::PL_N("coin", Currency::UK::coinage.elems) } { Lingua::EN::Inflect::WORDLIST(Currency::UK::coinage.sort({.value})>>.keys) }.";
 	my @coin-list = Currency::UK::make-change-list( $currency-in-pence  );
