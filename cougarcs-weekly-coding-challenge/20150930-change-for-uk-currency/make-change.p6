@@ -39,8 +39,8 @@ module Currency::UK {
 	our sub make-change-count( Int $amount where $amount >= 0  ) {
 		# count the ways to make change
 		sub make-change-helper-count( Int $amount, @denominations ) is cached {
-			return 1 if $amount == 0; # if the $amount is reached
 			return 0 if $amount < 0 or not @denominations; # if the $amount is invalid or no more coins left
+			return 1 if $amount == 0; # if the $amount is reached
 
 			# head and tail of @denominations array
 			my ($current-denomination, *@denominations-rest) = @denominations;
@@ -59,15 +59,15 @@ module Currency::UK {
 		say "Calculating a list of ways to make change:";
 		# nested function that will modify @coin-list
 		sub make-change-helper-list( Int $amount, @denominations, %coins-used = {} ) {
+			if $amount < 0 or not @denominations {
+				# if the $amount is invalid or no more coins left
+				return;
+			}
 			if $amount == 0 {
 				# if the $amount is reached
 				#say %coins-used.perl;#DEBUG
 				$bar.update(@coin-list.elems);
 				push @coin-list, %coins-used;
-				return;
-			}
-			if $amount < 0 or not @denominations {
-				# if the $amount is invalid or no more coins left
 				return;
 			}
 
