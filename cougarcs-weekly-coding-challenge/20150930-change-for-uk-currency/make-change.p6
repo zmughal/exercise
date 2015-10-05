@@ -34,6 +34,7 @@ module Currency::UK {
 		} elsif $currency-ast<currency-pound>:exists {
 			$currency-in-pence = $pound-to-pence * ~$currency-ast<currency-pound><value>.Rat;
 		}
+		return $currency-in-pence;
 	}
 
 	our sub make-change-count( Int $amount where $amount >= 0  ) {
