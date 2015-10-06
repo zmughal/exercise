@@ -15,7 +15,7 @@ module Currency::UK {
 		token nonzero-digit { <[ 1 .. 9 ]> };
 		token digit { <[ 0 .. 9 ]> };
 		token integer { <nonzero-digit> <digit>+ | <digit> };
-		token decimal { <.integer>? \. \d \d };
+		token decimal { <.integer>? \. <.digit> <.digit> };
 		token number { <.integer> | <.decimal> };
 	}
 	our $pound-to-pence = 100;
