@@ -13,6 +13,7 @@ sub generate_combos {
 	for (my $i = 0; $i < $k; $i++) {
 		$com[$i] = $i;
 		$partial_prod[$i+1] = $partial_prod[$i] * ( $com[$i] + 1 );
+		#say sprintf("%d %f", $com[$i], $partial_prod[$i+1]);
 	};
 	my $last_prod = $partial_prod[-1];
 
