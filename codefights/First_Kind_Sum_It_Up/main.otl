@@ -6,3 +6,6 @@ profile
 C/C++ code
 	rm -v first-kind-sum-it-up; make CC=gcc LDFLAGS="-lquadmath" first-kind-sum-it-up; ./first-kind-sum-it-up
 	rm -v first-kind-sum-it-up; make CC=g++-5 LDFLAGS="-lquadmath" first-kind-sum-it-up; ./first-kind-sum-it-up
+
+	rm -v first-kind-sum-it-up; make CC=gcc CFLAGS="-Wall" first-kind-sum-it-up; ./first-kind-sum-it-up
+	rm -v first-kind-sum-it-up; make CC=g++-5 CFLAGS="-Wall -std=c++11" first-kind-sum-it-up; ./first-kind-sum-it-up
