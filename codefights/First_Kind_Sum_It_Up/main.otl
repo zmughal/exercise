@@ -1,0 +1,4 @@
+profile
+	perl -d:NYTProf -e 'do "first-kind-sum-it-up.pl"; First_Kind_Sum_It_Up(63, 59)'
+	nytprofhtml nytprof.out
+	see nytprof/index.html
