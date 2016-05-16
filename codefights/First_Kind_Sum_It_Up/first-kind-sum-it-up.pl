@@ -3,35 +3,34 @@
 use v5.016;
 use strict;
 use warnings;
-use Algorithm::Combinatorics qw/combinations/;
 
 sub generate_combos {
 	my ($n, $k) = @_;
 	my @com;
 	for (my $i = 0; $i < $k; $i++) { $com[$i] = $i };
-	while ($com[$k - 1] < $n) {
-		for (my $i = 0; $i < $k; $i++) {
-			print "$com[$i]  ";
-		}
-		say;
+	return sub {
+		return unless $com[$k - 1] < $n;
+
+		my @copy = @com;
 
 		my $t = $k - 1;
 		while ($t != 0 && $com[$t] == $n - $k + $t) { $t-- };
 		$com[$t]++;
 		for (my $i = $t + 1; $i < $k; $i++) { $com[$i] = $com[$i - 1] + 1 };
-    }
+
+		return \@copy;
+	};
 }
 
 sub First_Kind_Sum_It_Up {
 	my ($n, $k) = @_;
-	generate_combos( $n, $k );
 
 	my $sum = 0;
 
-	my $iter = combinations([1..$n],$k);
-	while(  my $subset = $iter->next ) {
+	my $iter = generate_combos($n,$k);
+	while( defined(  my $subset = $iter->() ) ) {
 		my $prod = 1;
-		$prod *= $_ for @$subset;
+		$prod *= ( $_ + 1 ) for @$subset;
 
 		$sum += 1 / ( $prod );
 	}
