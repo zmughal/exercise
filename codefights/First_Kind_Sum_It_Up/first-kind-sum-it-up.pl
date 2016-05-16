@@ -22,17 +22,33 @@ sub generate_combos {
 	};
 }
 
+sub prod_idx {
+	my ($list) = @_;
+	my $prod = 1;
+	$prod *= ( $_ + 1 ) for @$list;
+	return $prod;
+}
+
 sub First_Kind_Sum_It_Up {
 	my ($n, $k) = @_;
 
 	my $sum = 0;
 
-	my $iter = generate_combos($n,$k);
-	while( defined(  my $subset = $iter->() ) ) {
-		my $prod = 1;
-		$prod *= ( $_ + 1 ) for @$subset;
+	my $prod_denom = prod_idx( [ 1..$n-1 ] );
+	# use symmetry to compute the smaller number of elements
+	if( $k < $n - $k ) {
+		my $iter = generate_combos($n,$k);
+		while( defined(  my $subset = $iter->() ) ) {
+			my $prod = prod_idx( $subset );
+			$sum += 1 / ( $prod );
+		}
 
-		$sum += 1 / ( $prod );
+	} else {
+		my $iter = generate_combos($n,$n - $k);
+		while( defined(  my $subset = $iter->() ) ) {
+			my $prod = prod_idx( $subset );
+			$sum += $prod / $prod_denom;
+		}
 	}
 
 	sprintf("%.2E", $sum) =~ s/(E[+-])0(\d)/$1$2/r;
