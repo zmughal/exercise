@@ -7,18 +7,32 @@ use warnings;
 sub generate_combos {
 	my ($n, $k) = @_;
 	my @com;
-	for (my $i = 0; $i < $k; $i++) { $com[$i] = $i };
+	my @partial_prod; # of length k + 1
+	$partial_prod[0] = 1;
+
+	for (my $i = 0; $i < $k; $i++) {
+		$com[$i] = $i;
+		$partial_prod[$i+1] = $partial_prod[$i] * ( $com[$i] + 1 );
+	};
+	my $last_prod = $partial_prod[-1];
+
 	return sub {
 		return unless $com[$k - 1] < $n;
 
-		my @copy = @com;
+		my $copy = $last_prod;
 
 		my $t = $k - 1;
 		while ($t != 0 && $com[$t] == $n - $k + $t) { $t-- };
 		$com[$t]++;
-		for (my $i = $t + 1; $i < $k; $i++) { $com[$i] = $com[$i - 1] + 1 };
+		$partial_prod[$t+1] = $partial_prod[$t] * ( $com[$t] + 1 );
 
-		return \@copy;
+		for (my $i = $t + 1; $i < $k; $i++) {
+			$com[$i] = $com[$i - 1] + 1;
+			$partial_prod[$i+1] = $partial_prod[$i] * ( $com[$i] + 1 );
+		};
+		$last_prod = $partial_prod[-1];
+
+		return $copy;
 	};
 }
 
@@ -38,15 +52,13 @@ sub First_Kind_Sum_It_Up {
 	# use symmetry to compute the smaller number of elements
 	if( $k < $n - $k ) {
 		my $iter = generate_combos($n,$k);
-		while( defined(  my $subset = $iter->() ) ) {
-			my $prod = prod_idx( $subset );
+		while( defined(  my $prod = $iter->() ) ) {
 			$sum += 1 / ( $prod );
 		}
 
 	} else {
 		my $iter = generate_combos($n,$n - $k);
-		while( defined(  my $subset = $iter->() ) ) {
-			my $prod = prod_idx( $subset );
+		while( defined(  my $prod = $iter->() ) ) {
 			$sum += $prod / $prod_denom;
 		}
 	}
