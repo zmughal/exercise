@@ -3,26 +3,17 @@
 use v5.016;
 use strict;
 use warnings;
-use POSIX qw(pow);
+use Algorithm::Combinatorics qw/combinations/;
 
 sub First_Kind_Sum_It_Up {
 	my ($n, $k) = @_;
-	my $powerset_sz = pow(2,$n);
 
 	my $sum = 0;
-	for( my $set = 1; $set < $powerset_sz; $set++) {
-		# convert to binary
-		my $set_bin = sprintf("%0${n}b", $set);
 
-		# skip sets that don't have $k elements
-		my $popcount = (my $set_bin_cp = $set_bin) =~ tr/1//;
-		next unless $popcount == $k;
-
-		my @subset;
-		push @subset, pos($set_bin) while( $set_bin =~ m/1/g );
-
+	my $iter = combinations([1..$n],$k);
+	while(  my $subset = $iter->next ) {
 		my $prod = 1;
-		$prod *= $_ for @subset;
+		$prod *= $_ for @$subset;
 
 		$sum += 1 / ( $prod );
 	}
