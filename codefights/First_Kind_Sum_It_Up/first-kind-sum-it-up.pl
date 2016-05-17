@@ -10,12 +10,9 @@ memoize('S');
 
 sub factorial {
 	my ($n) = @_;
-	my $prod = 1;
-	for my $i (1..$n) {
-		$prod *= $i;
-	}
+	if( $n == 0 ) { return 1; }
 
-	return $prod;
+	return $n * factorial($n-1);
 }
 
 sub S {

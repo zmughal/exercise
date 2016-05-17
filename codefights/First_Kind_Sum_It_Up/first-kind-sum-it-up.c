@@ -34,18 +34,11 @@ typedef long double __float128;
 
 
 my_float factorial(size_t n) {
-	if( 0 == n ) {
-		return 1;
-	}
+	if( 0 == n ) { return 1; }
 	if( 0 != memo_factorial[n] )
 		return memo_factorial[n];
 
-	my_float prod = 1;
-	for( size_t i = 1; i <= n; i++) {
-		prod *= i;
-	}
-
-	memo_factorial[n] = prod;
+	memo_factorial[n] = n * factorial(n-1);
 
 	return memo_factorial[n];
 }
