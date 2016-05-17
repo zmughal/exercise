@@ -3,69 +3,40 @@
 use v5.016;
 use strict;
 use warnings;
+use Memoize;
 
-sub generate_combos {
-	my ($n, $k) = @_;
-	my @com;
-	my @partial_prod; # of length k + 1
-	$partial_prod[0] = 1;
+memoize('factorial');
+memoize('S');
 
-	for (my $i = 0; $i < $k; $i++) {
-		$com[$i] = $i;
-		$partial_prod[$i+1] = $partial_prod[$i] * ( $com[$i] + 1 );
-		#say sprintf("%d %f", $com[$i], $partial_prod[$i+1]);
-	};
-	my $last_prod = $partial_prod[-1];
+sub factorial {
+	my ($n) = @_;
+	my $prod = 1;
+	for my $i (1..$n) {
+		$prod *= $i;
+	}
 
-	return sub {
-		return unless $com[$k - 1] < $n;
-
-		my $copy = $last_prod;
-
-		my $t = $k - 1;
-		while ($t != 0 && $com[$t] == $n - $k + $t) { $t-- };
-		$com[$t]++;
-		$partial_prod[$t+1] = $partial_prod[$t] * ( $com[$t] + 1 );
-
-		for (my $i = $t + 1; $i < $k; $i++) {
-			$com[$i] = $com[$i - 1] + 1;
-			$partial_prod[$i+1] = $partial_prod[$i] * ( $com[$i] + 1 );
-		};
-		$last_prod = $partial_prod[-1];
-
-		return $copy;
-	};
+	return $prod;
 }
 
-sub prod_idx {
-	my ($list) = @_;
-	my $prod = 1;
-	$prod *= ( $_ + 1 ) for @$list;
-	return $prod;
+sub S {
+	my ($n, $m) = @_;
+	if ( $m == 1 ) {
+		return $n*($n + 1)/2;
+	} elsif ( $n == $m ) {
+		return factorial($m);
+	} else {
+		return S($n - 1, $m) + $n*S($n - 1, $m - 1)
+	}
 }
 
 sub First_Kind_Sum_It_Up {
 	my ($n, $k) = @_;
-
-	my $sum = 0;
-
-	my $prod_denom = prod_idx( [ 1..$n-1 ] );
-	# use symmetry to compute the smaller number of elements
-	if( $k < $n - $k ) {
-		my $iter = generate_combos($n,$k);
-		while( defined(  my $prod = $iter->() ) ) {
-			$sum += 1 / ( $prod );
-		}
-
-	} else {
-		my $iter = generate_combos($n,$n - $k);
-		while( defined(  my $prod = $iter->() ) ) {
-			$sum += $prod / $prod_denom;
-		}
-	}
+	my $v = S($n, $n-$k);
+	my $sum = $v / factorial($n);
 
 	sprintf("%.2E", $sum) =~ s/(E[+-])0(\d)/$1$2/r;
 }
+
 
 sub testing {
 	require Test::Most;
